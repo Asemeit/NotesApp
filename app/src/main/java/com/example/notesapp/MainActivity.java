@@ -5,8 +5,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.notesapp.adapter.NotesAdapter;
@@ -40,13 +42,51 @@ public class MainActivity extends AppCompatActivity {
         });
         recyclerView.setAdapter(adapter);
 
+        // Swipe to Delete
+        // Swipe to Delete
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    Note note = adapter.getNoteAt(position);
+                    notesViewModel.delete(note);
+                    com.google.android.material.snackbar.Snackbar
+                            .make(recyclerView, "Note deleted",
+                                    com.google.android.material.snackbar.Snackbar.LENGTH_LONG)
+                            .setAction("Undo", v -> notesViewModel.insert(note)).show();
+                }
+            }
+        }).attachToRecyclerView(recyclerView);
+
         // Initialize ViewModel
         notesViewModel = new ViewModelProvider(this).get(NotesViewModel.class);
 
-        // Observe Data
-        notesViewModel.getAllNotes().observe(this, notes -> {
-            // Update the cached copy of the notes in the adapter.
+        // Observe Data (Single Source of Truth)
+        notesViewModel.getNotes().observe(this, notes -> {
             adapter.updateNotes(notes);
+        });
+
+        // Setup Search
+        androidx.appcompat.widget.SearchView searchView = findViewById(R.id.searchView);
+        searchView.setOnQueryTextListener(new androidx.appcompat.widget.SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                notesViewModel.setSearchQuery(newText);
+                return true;
+            }
         });
 
         // Floating Action Button to Add Note

@@ -30,6 +30,10 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
         notifyDataSetChanged();
     }
 
+    public Note getNoteAt(int position) {
+        return notes.get(position);
+    }
+
     @NonNull
     @Override
     public NoteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

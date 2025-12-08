@@ -21,6 +21,10 @@ public class NoteRepository {
         return allNotes;
     }
 
+    public LiveData<List<Note>> searchNotes(String query) {
+        return noteDao.searchNotes(query);
+    }
+
     public void insert(Note note) {
         NoteDatabase.databaseWriteExecutor.execute(() -> {
             noteDao.insert(note);
